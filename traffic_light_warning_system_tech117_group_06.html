@@ -1,0 +1,998 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Traffic Light Warning System | TECH117 — Group 06</title>
+
+  <!-- Google Fonts: Inter & JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+  <!-- Prism.js Syntax Highlighting & Line Numbers -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/line-numbers/prism-line-numbers.min.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-c.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-cpp.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/line-numbers/prism-line-numbers.min.js"></script>
+
+  <!-- Tailwind CSS via CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          }
+        }
+      }
+    };
+  </script>
+
+  <style>
+    /* Traffic Light Housing & Bulb Glow Effects */
+    .bulb {
+      width: 64px;
+      height: 64px;
+      border-radius: 9999px;
+      background-color: #1e293b;
+      border: 3px solid #334155;
+      transition: all 0.25s ease;
+      position: relative;
+    }
+    .bulb.red.active {
+      background-color: #ef4444;
+      border-color: #fca5a5;
+      box-shadow: 0 0 22px #ef4444, 0 0 44px rgba(239, 68, 68, 0.65);
+    }
+    .bulb.yellow.active {
+      background-color: #f59e0b;
+      border-color: #fde68a;
+      box-shadow: 0 0 22px #f59e0b, 0 0 44px rgba(245, 158, 11, 0.65);
+    }
+    .bulb.green.active {
+      background-color: #10b981;
+      border-color: #a7f3d0;
+      box-shadow: 0 0 22px #10b981, 0 0 44px rgba(16, 185, 129, 0.65);
+    }
+
+    /* Custom Range Slider */
+    input[type="range"] {
+      accent-color: #2563eb;
+    }
+
+    /* Prism Override for Clean Rounded Corners */
+    pre[class*="language-"] {
+      margin: 0 !important;
+      border-radius: 0.75rem !important;
+      font-family: 'JetBrains Mono', monospace !important;
+      font-size: 0.825rem !important;
+    }
+
+    /* Print Hero Hidden on Screen, Shown on Print */
+    #print-hero {
+      display: none;
+    }
+
+    /* Print-Friendly Stylesheet */
+    @media print {
+      #sidebar-nav,
+      #mobile-topbar,
+      .print-button,
+      .copy-btn,
+      #interactive-controls,
+      #toast-box {
+        display: none !important;
+      }
+
+      body {
+        background: #ffffff !important;
+        color: #0f172a !important;
+        font-size: 11pt;
+      }
+
+      #main-wrapper {
+        margin-left: 0 !important;
+        padding: 0 !important;
+        max-width: 100% !important;
+      }
+
+      #print-hero {
+        display: block !important;
+        margin: 16px 0 24px 0;
+        text-align: center;
+      }
+
+      #print-hero img {
+        max-height: 260px;
+        margin: 0 auto;
+        border-radius: 8px;
+        border: 1px solid #cbd5e1;
+      }
+
+      section {
+        break-inside: avoid;
+        box-shadow: none !important;
+        border: 1px solid #cbd5e1 !important;
+        margin-bottom: 16px !important;
+        padding: 16px !important;
+      }
+
+      pre[class*="language-"] {
+        white-space: pre-wrap !important;
+        word-break: break-word !important;
+        border: 1px solid #cbd5e1 !important;
+      }
+    }
+  </style>
+
+  <!-- Populate Print Hero Image Before Printing -->
+  <script>
+    window.addEventListener("beforeprint", () => {
+      const proto = document.getElementById("prototypeImage");
+      const printHeroImg = document.querySelector("#print-hero img");
+      if (proto && printHeroImg && proto.src) {
+        printHeroImg.src = proto.src;
+      }
+    });
+  </script>
+</head>
+
+<body class="bg-slate-50 text-slate-900 font-sans antialiased selection:bg-blue-600 selection:text-white">
+
+  <!-- Non-blocking Toast Notification (Replaces alert()) -->
+  <div id="toast-box" class="fixed bottom-20 right-6 z-50 pointer-events-none opacity-0 transition-opacity duration-300 bg-slate-900 text-white text-xs font-mono px-4 py-2.5 rounded-xl shadow-lg border border-slate-700">
+    Code copied to clipboard!
+  </div>
+
+  <!-- Floating Print Button -->
+  <button class="print-button fixed bottom-6 right-6 z-40 inline-flex items-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 active:scale-95 text-white font-semibold text-sm rounded-xl shadow-lg shadow-blue-600/25 transition-all cursor-pointer" onclick="window.print()">
+    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+    </svg>
+    Print This Page
+  </button>
+
+  <!-- Mobile Top Navigation Bar -->
+  <header id="mobile-topbar" class="lg:hidden sticky top-0 z-30 bg-white/95 backdrop-blur border-b border-slate-200 px-4 py-3 flex items-center justify-between">
+    <a href="#top" class="flex items-center gap-2 font-extrabold text-slate-900">
+      <span class="text-xl">🚦</span>
+      <span>SmartTraffic Alert</span>
+    </a>
+    <button id="mobile-menu-toggle" type="button" aria-label="Toggle Menu" class="p-2 rounded-lg border border-slate-200 text-slate-700 hover:bg-slate-100">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+      </svg>
+    </button>
+  </header>
+
+  <!-- Mobile Drawer Navigation -->
+  <div id="mobile-drawer" class="lg:hidden hidden fixed inset-x-0 top-[57px] z-30 bg-white border-b border-slate-200 shadow-xl px-4 py-3">
+    <ul class="grid grid-cols-2 gap-2 text-sm font-medium text-slate-700">
+      <li><a href="#top" class="mobile-nav-link block px-3 py-2 rounded-lg hover:bg-slate-100">Title &amp; Overview</a></li>
+      <li><a href="#information" class="mobile-nav-link block px-3 py-2 rounded-lg hover:bg-slate-100">Project Info</a></li>
+      <li><a href="#introduction" class="mobile-nav-link block px-3 py-2 rounded-lg hover:bg-slate-100">Intro &amp; Goals</a></li>
+      <li><a href="#constraints" class="mobile-nav-link block px-3 py-2 rounded-lg hover:bg-slate-100">Constraints &amp; Risks</a></li>
+      <li><a href="#demo" class="mobile-nav-link block px-3 py-2 rounded-lg hover:bg-slate-100">Interactive Demo</a></li>
+      <li><a href="#circuit-diagram" class="mobile-nav-link block px-3 py-2 rounded-lg hover:bg-slate-100">Circuit Diagram</a></li>
+      <li><a href="#environment" class="mobile-nav-link block px-3 py-2 rounded-lg hover:bg-slate-100">Environment</a></li>
+      <li><a href="#bom" class="mobile-nav-link block px-3 py-2 rounded-lg hover:bg-slate-100">Bill of Materials</a></li>
+      <li><a href="#prototype" class="mobile-nav-link block px-3 py-2 rounded-lg hover:bg-slate-100">Prototype</a></li>
+      <li><a href="#code" class="mobile-nav-link block px-3 py-2 rounded-lg hover:bg-slate-100">Arduino Code</a></li>
+      <li><a href="#conclusion" class="mobile-nav-link block px-3 py-2 rounded-lg hover:bg-slate-100">Conclusion</a></li>
+      <li><a href="#references" class="mobile-nav-link block px-3 py-2 rounded-lg hover:bg-slate-100">References</a></li>
+    </ul>
+  </div>
+
+  <!-- Fixed Left Sidebar Navigation (Desktop) -->
+  <nav id="sidebar-nav" aria-label="Section Navigation" class="hidden lg:flex flex-col justify-between fixed top-0 left-0 bottom-0 w-64 bg-slate-900 text-slate-200 border-r border-slate-800 p-6 z-30">
+    <div>
+      <a href="#top" class="flex items-center gap-3 pb-5 border-b border-slate-800">
+        <div class="flex flex-col gap-1 p-1.5 rounded-lg bg-slate-950 border border-slate-700">
+          <span class="w-2.5 h-2.5 rounded-full bg-red-500"></span>
+          <span class="w-2.5 h-2.5 rounded-full bg-amber-400"></span>
+          <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+        </div>
+        <div>
+          <div class="font-extrabold text-white tracking-tight text-base">SmartTraffic Alert</div>
+          <div class="text-xs font-mono text-blue-400">TECH 117 • Group 06</div>
+        </div>
+      </a>
+
+      <div class="mt-5 mb-2 text-[11px] font-mono uppercase tracking-wider text-slate-400">Report Sections</div>
+      <ul class="space-y-1 text-sm font-medium">
+        <li><a href="#top" class="nav-item block px-3 py-2 rounded-lg hover:bg-slate-800 hover:text-white transition-colors">1. Overview &amp; Title</a></li>
+        <li><a href="#information" class="nav-item block px-3 py-2 rounded-lg hover:bg-slate-800 hover:text-white transition-colors">2. Project Information</a></li>
+        <li><a href="#introduction" class="nav-item block px-3 py-2 rounded-lg hover:bg-slate-800 hover:text-white transition-colors">3. Introduction &amp; Goals</a></li>
+        <li><a href="#constraints" class="nav-item block px-3 py-2 rounded-lg hover:bg-slate-800 hover:text-white transition-colors">4. Constraints &amp; Risks</a></li>
+        <li><a href="#demo" class="nav-item block px-3 py-2 rounded-lg hover:bg-slate-800 hover:text-white transition-colors">5. Interactive Demo</a></li>
+        <li><a href="#circuit-diagram" class="nav-item block px-3 py-2 rounded-lg hover:bg-slate-800 hover:text-white transition-colors">6. Circuit Diagram</a></li>
+        <li><a href="#environment" class="nav-item block px-3 py-2 rounded-lg hover:bg-slate-800 hover:text-white transition-colors">7. Environmental Impact</a></li>
+        <li><a href="#bom" class="nav-item block px-3 py-2 rounded-lg hover:bg-slate-800 hover:text-white transition-colors">8. Bill of Materials (BoM)</a></li>
+        <li><a href="#prototype" class="nav-item block px-3 py-2 rounded-lg hover:bg-slate-800 hover:text-white transition-colors">9. Physical Prototype</a></li>
+        <li><a href="#code" class="nav-item block px-3 py-2 rounded-lg hover:bg-slate-800 hover:text-white transition-colors">10. Arduino C++ Code</a></li>
+        <li><a href="#conclusion" class="nav-item block px-3 py-2 rounded-lg hover:bg-slate-800 hover:text-white transition-colors">11. Conclusion</a></li>
+        <li><a href="#references" class="nav-item block px-3 py-2 rounded-lg hover:bg-slate-800 hover:text-white transition-colors">12. References</a></li>
+      </ul>
+    </div>
+
+    <div class="pt-4 border-t border-slate-800 text-xs text-slate-400">
+      <div class="font-semibold text-slate-300">Group 06 Team</div>
+      <div class="mt-0.5">Xuan, Tyler, Michael, Jide</div>
+    </div>
+  </nav>
+
+  <!-- Main Content Wrapper -->
+  <div id="main-wrapper" class="lg:ml-64">
+    <main class="max-w-5xl mx-auto px-4 sm:px-8 py-8 sm:py-12 space-y-10">
+
+      <!-- HERO HEADER -->
+      <header id="top" class="rounded-3xl bg-gradient-to-br from-slate-900 via-slate-800 to-blue-950 text-white p-8 sm:p-10 shadow-xl border border-slate-800">
+        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/20 border border-blue-400/30 text-blue-300 text-xs font-mono font-semibold mb-4">
+          <span>TECH 117 — Computer Engineering Technology</span>
+          <span>•</span>
+          <span>Group 06</span>
+        </div>
+        <h1 class="text-3xl sm:text-5xl font-extrabold tracking-tight leading-tight">
+          Traffic Light Warning System
+        </h1>
+        <p class="mt-4 text-slate-300 text-base sm:text-lg max-w-3xl leading-relaxed">
+          An intelligent real-time proximity and driver alert system powered by an <strong>Arduino Uno</strong>, <strong>HC-SR04 ultrasonic sensor</strong>, <strong>LED indicators</strong>, and a <strong>multi-frequency passive buzzer</strong>—designed to prevent red-light running, reduce intersection collisions, and enhance road safety in low-visibility conditions.
+        </p>
+
+        <!-- Print-Only Prototype Hero Container -->
+        <div id="print-hero">
+          <img src="" alt="Traffic Light Warning System Prototype" />
+        </div>
+      </header>
+
+      <!-- SECTION 1: PROJECT INFORMATION -->
+      <section id="information" class="bg-white rounded-2xl p-6 sm:p-8 shadow-sm border border-slate-200">
+        <div class="flex items-center justify-between border-b border-slate-100 pb-4 mb-6">
+          <h2 class="text-2xl font-bold text-slate-900">1. Project Information</h2>
+          <span class="text-xs font-mono px-2.5 py-1 rounded-lg bg-slate-100 text-slate-600">Fall 2025 / 2026</span>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div class="p-4 rounded-xl bg-slate-50 border border-slate-200/80">
+            <div class="text-xs font-mono uppercase text-slate-500">Course</div>
+            <div class="font-bold text-slate-900 mt-1">TECH 117</div>
+            <div class="text-xs text-slate-600 mt-0.5">Computer Engineering Technology</div>
+          </div>
+          <div class="p-4 rounded-xl bg-slate-50 border border-slate-200/80">
+            <div class="text-xs font-mono uppercase text-slate-500">Instructor</div>
+            <div class="font-bold text-slate-900 mt-1">Ph.D. Ana Rodrigues</div>
+            <div class="text-xs text-slate-600 mt-0.5">Faculty Supervisor</div>
+          </div>
+          <div class="p-4 rounded-xl bg-slate-50 border border-slate-200/80">
+            <div class="text-xs font-mono uppercase text-slate-500">Project Group</div>
+            <div class="font-bold text-blue-600 mt-1">Group 06</div>
+            <div class="text-xs text-slate-600 mt-0.5">SmartTraffic Alert Team</div>
+          </div>
+          <div class="p-4 rounded-xl bg-slate-50 border border-slate-200/80">
+            <div class="text-xs font-mono uppercase text-slate-500">Team Members</div>
+            <div class="font-bold text-slate-900 mt-1">Xuan, Tyler, Michael, Jide</div>
+            <div class="text-xs text-slate-600 mt-0.5">Hardware, Firmware &amp; Web Docs</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SECTION 2: INTRODUCTION, GOALS & SUCCESS CRITERIA -->
+      <section id="introduction" class="bg-white rounded-2xl p-6 sm:p-8 shadow-sm border border-slate-200 space-y-6">
+        <div class="border-b border-slate-100 pb-4">
+          <h2 class="text-2xl font-bold text-slate-900">2. Introduction, Goals &amp; Success Criteria</h2>
+        </div>
+
+        <p class="text-slate-700 leading-relaxed">
+          Intersections are among the most high-risk areas on modern roadways due to sudden signal transitions, driver distraction, and adverse weather conditions such as fog or heavy rain. Our <strong>Traffic Light Warning System</strong> addresses this safety gap using an <strong>Arduino Uno</strong>, an <strong>HC-SR04 ultrasonic sensor</strong>, a <strong>passive buzzer</strong>, and <strong>Red/Yellow/Green LEDs</strong> to detect proximity and upcoming signal states, delivering timely visual and auditory warnings so drivers have sufficient reaction time to decelerate safely.
+        </p>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <!-- Project Goals -->
+          <div class="p-6 rounded-2xl bg-blue-50/60 border border-blue-200/80 space-y-3">
+            <div class="flex items-center gap-2 text-blue-700 font-bold text-lg">
+              <span>🎯</span>
+              <h3>Project Goals (System Intent)</h3>
+            </div>
+            <ul class="space-y-2.5 text-sm text-slate-700">
+              <li class="flex items-start gap-2">
+                <span class="text-blue-600 font-bold mt-0.5">•</span>
+                <span><strong>Real-Time Signal &amp; Proximity Detection:</strong> Accurately identify traffic light states (Green, Yellow, Red) and approach distances prior to the vehicle reaching the intersection stop line.</span>
+              </li>
+              <li class="flex items-start gap-2">
+                <span class="text-blue-600 font-bold mt-0.5">•</span>
+                <span><strong>Timely Multi-Modal Driver Alerts:</strong> Deliver clear visual dashboard LED indicators and distinct audio chimes (300 Hz caution / 500 Hz stop) to warn drivers of impending Yellow or Red lights.</span>
+              </li>
+              <li class="flex items-start gap-2">
+                <span class="text-blue-600 font-bold mt-0.5">•</span>
+                <span><strong>Intersection Safety Enhancement:</strong> Reduce late hard-braking and unintentional red-light violations during distracted driving or low-visibility weather.</span>
+              </li>
+            </ul>
+          </div>
+
+          <!-- Success Criteria -->
+          <div class="p-6 rounded-2xl bg-emerald-50/60 border border-emerald-200/80 space-y-3">
+            <div class="flex items-center gap-2 text-emerald-700 font-bold text-lg">
+              <span>✅</span>
+              <h3>Success Criteria (Measurable KPIs)</h3>
+            </div>
+            <ul class="space-y-2.5 text-sm text-slate-700">
+              <li class="flex items-start gap-2">
+                <span class="text-emerald-600 font-bold mt-0.5">•</span>
+                <span><strong>Detection Accuracy (&ge; 95%):</strong> The prototype reliably classifies Green (&gt; 30 cm), Yellow (11–30 cm), and Red (&le; 10 cm) alert zones across 50 consecutive test runs.</span>
+              </li>
+              <li class="flex items-start gap-2">
+                <span class="text-emerald-600 font-bold mt-0.5">•</span>
+                <span><strong>Alert Latency (&lt; 0.5 seconds):</strong> End-to-end system response time from ultrasonic echo or signal transition to LED/buzzer activation remains under 500 ms.</span>
+              </li>
+              <li class="flex items-start gap-2">
+                <span class="text-emerald-600 font-bold mt-0.5">•</span>
+                <span><strong>User Comprehension (&ge; 85%):</strong> At least 85% of test participants immediately distinguish caution vs. stop warnings without confusion during usability trials.</span>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <!-- SECTION 3: CONSTRAINTS & RISKS -->
+      <section id="constraints" class="bg-white rounded-2xl p-6 sm:p-8 shadow-sm border border-slate-200 space-y-6">
+        <div class="border-b border-slate-100 pb-4">
+          <h2 class="text-2xl font-bold text-slate-900">3. Project Constraints, Risks &amp; Contingency Plans</h2>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <!-- Constraints -->
+          <div class="p-6 rounded-2xl bg-slate-50 border border-slate-200 space-y-3">
+            <h3 class="font-bold text-lg text-slate-900 flex items-center gap-2">
+              <span>📌</span> Engineering Constraints
+            </h3>
+            <ul class="space-y-3 text-sm text-slate-700">
+              <li>
+                <strong class="text-slate-900">Time Constraint:</strong> The single-semester schedule limits physical validation to controlled tabletop scale models rather than live public roadway deployments.
+              </li>
+              <li>
+                <strong class="text-slate-900">Budget Constraint:</strong> A strict student hardware budget (~$42 USD) precludes expensive commercial DSRC / C-V2X (Vehicle-to-Everything) transceivers.
+              </li>
+              <li>
+                <strong class="text-slate-900">Resources &amp; Skills:</strong> Limited access to outdoor testing tracks and varying levels of embedded C++ programming experience across the four team members.
+              </li>
+            </ul>
+          </div>
+
+          <!-- Risks & Backup Plans -->
+          <div class="p-6 rounded-2xl bg-amber-50/60 border border-amber-200/80 space-y-3">
+            <h3 class="font-bold text-lg text-amber-900 flex items-center gap-2">
+              <span>⚠️</span> Identified Risks &amp; Backup Plans
+            </h3>
+            <ul class="space-y-3 text-sm text-slate-700">
+              <li>
+                <strong class="text-slate-900">Risk 1 — Ambient Glare &amp; Acoustic Echo Noise:</strong> Stray reflections or background lighting may trigger erratic readings.<br />
+                <span class="text-amber-800 font-medium">Backup Plan:</span> Filter invalid readings (<code>distance &lt;= 0</code>) in firmware and conduct primary demonstrations under controlled indoor lighting.
+              </li>
+              <li>
+                <strong class="text-slate-900">Risk 2 — Hardware Failure or Shipping Delays:</strong> Sensors or jumper connections may loosen or fail prior to demo day.<br />
+                <span class="text-amber-800 font-medium">Backup Plan:</span> Maintain the interactive web-based simulator below to demonstrate exact threshold logic and audio tones on schedule.
+              </li>
+              <li>
+                <strong class="text-slate-900">Risk 3 — Scope Creep:</strong> Adding complex multi-lane wireless networking could jeopardize core reliability.<br />
+                <span class="text-amber-800 font-medium">Backup Plan:</span> Lock core ultrasonic proximity and 3-state LED/buzzer alert deliverables first before attempting stretch enhancements.
+              </li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <!-- SECTION 4: INTERACTIVE ALERT PROTOTYPE & SIMULATOR -->
+      <section id="demo" class="bg-slate-900 text-white rounded-3xl p-6 sm:p-8 shadow-xl border border-slate-800 space-y-6">
+        <div class="flex flex-wrap items-center justify-between gap-4 border-b border-slate-800 pb-4">
+          <div>
+            <span class="text-xs font-mono uppercase tracking-wider text-blue-400 font-semibold">Interactive Digital Twin</span>
+            <h2 class="text-2xl font-bold text-white mt-0.5">4. Interactive Alert Prototype &amp; HC-SR04 Simulator</h2>
+          </div>
+          <button id="audio-toggle-btn" type="button" class="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-mono font-semibold text-amber-400 transition-colors cursor-pointer">
+            🔇 Buzzer Audio: OFF (Click to Enable)
+          </button>
+        </div>
+
+        <p class="text-sm text-slate-300">
+          Drag the <strong>Ultrasonic Distance Slider</strong> (5 cm – 100 cm) to test the exact Arduino firmware thresholds (<code>&le; 10 cm</code> Red @ 500 Hz, <code>&le; 30 cm</code> Yellow @ 300 Hz, <code>&gt; 30 cm</code> Green), or use the manual override buttons below.
+        </p>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
+          <!-- Traffic Light Housing (4 cols) -->
+          <div class="lg:col-span-4 flex flex-col items-center justify-center p-6 rounded-2xl bg-slate-950 border border-slate-800">
+            <div class="text-xs font-mono text-slate-400 mb-3 uppercase tracking-wider">Signal Head</div>
+            <div class="bg-slate-900 px-6 py-5 rounded-3xl border-2 border-slate-700 shadow-inner flex flex-col gap-4">
+              <div id="light-red" class="bulb red" title="Red LED (Pin D4)"></div>
+              <div id="light-yellow" class="bulb yellow" title="Yellow LED (Pin D3)"></div>
+              <div id="light-green" class="bulb green active" title="Green LED (Pin D2)"></div>
+            </div>
+            <div id="buzzer-badge" class="mt-4 text-xs font-mono px-3 py-1 rounded-full bg-slate-800 text-slate-300 border border-slate-700">
+              Buzzer (D11): SILENT (0 Hz)
+            </div>
+          </div>
+
+          <!-- Dashboard Display, Slider & Serial Monitor (8 cols) -->
+          <div id="interactive-controls" class="lg:col-span-8 space-y-5">
+            <!-- In-Vehicle Warning Banner -->
+            <div class="p-5 rounded-2xl bg-slate-950 border border-slate-800 space-y-3">
+              <div class="flex items-center justify-between text-xs font-mono text-slate-400">
+                <span>IN-VEHICLE DRIVER WARNING DISPLAY</span>
+                <span id="latency-badge" class="text-emerald-400">Response: &lt; 0.1s</span>
+              </div>
+              <div id="alert-banner" class="p-4 rounded-xl bg-emerald-500/15 border border-emerald-500/40 text-emerald-300 font-semibold text-sm sm:text-base transition-all">
+                STATUS: GREEN LIGHT (&gt; 30 cm) — Clear path. Proceed with normal caution.
+              </div>
+            </div>
+
+            <!-- Distance Slider Control -->
+            <div class="p-5 rounded-2xl bg-slate-950 border border-slate-800 space-y-3">
+              <div class="flex items-center justify-between">
+                <label for="distance-slider" class="text-sm font-semibold text-slate-200">
+                  HC-SR04 Simulated Distance to Stop Line / Obstacle:
+                </label>
+                <span id="distance-readout" class="font-mono text-lg font-bold text-blue-400">65 cm</span>
+              </div>
+              <input id="distance-slider" type="range" min="5" max="100" value="65" class="w-full h-2.5 bg-slate-800 rounded-lg cursor-pointer" />
+              <div class="flex justify-between text-[11px] font-mono text-slate-400">
+                <span class="text-red-400">5 cm (Red &le;10cm)</span>
+                <span class="text-amber-400">20 cm (Yellow &le;30cm)</span>
+                <span class="text-emerald-400">100 cm (Green &gt;30cm)</span>
+              </div>
+
+              <!-- Quick State Override Buttons -->
+              <div class="grid grid-cols-3 gap-2.5 pt-2">
+                <button type="button" onclick="setSignal('green')" class="py-2.5 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs sm:text-sm transition-colors cursor-pointer">
+                  Simulate Green (65 cm)
+                </button>
+                <button type="button" onclick="setSignal('yellow')" class="py-2.5 px-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs sm:text-sm transition-colors cursor-pointer">
+                  Simulate Yellow (20 cm)
+                </button>
+                <button type="button" onclick="setSignal('red')" class="py-2.5 px-3 rounded-xl bg-red-600 hover:bg-red-500 text-white font-semibold text-xs sm:text-sm transition-colors cursor-pointer">
+                  Simulate Red (8 cm)
+                </button>
+              </div>
+            </div>
+
+            <!-- Live Simulated Arduino Serial Monitor -->
+            <div class="p-4 rounded-2xl bg-black/80 border border-slate-800 font-mono text-xs">
+              <div class="flex items-center justify-between text-slate-400 border-b border-slate-800 pb-1.5 mb-2">
+                <span>Arduino Serial Monitor (9600 baud)</span>
+                <span class="text-emerald-400">● CONNECTED</span>
+              </div>
+              <div id="serial-output" class="h-20 overflow-y-auto space-y-1 text-emerald-300">
+                <div>Distance: 65 cm | State: GREEN | Buzzer: OFF</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SECTION 5: CIRCUIT DIAGRAM & PINOUT -->
+      <section id="circuit-diagram" class="bg-white rounded-2xl p-6 sm:p-8 shadow-sm border border-slate-200 space-y-6">
+        <div class="border-b border-slate-100 pb-4">
+          <h2 class="text-2xl font-bold text-slate-900">5. Circuit Diagram &amp; Hardware Pinout</h2>
+        </div>
+
+        <p class="text-slate-700 text-sm sm:text-base leading-relaxed">
+          The HC-SR04 ultrasonic sensor continuously measures obstacle distance using 40 kHz acoustic pulses. Based on the computed distance in centimeters, the Arduino Uno switches the corresponding Red, Yellow, or Green LED (protected by 220 &Omega; current-limiting resistors) and drives the passive piezo buzzer via PWM tones.
+        </p>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
+          <!-- Circuit Image with Graceful SVG Fallback -->
+          <div class="lg:col-span-7 rounded-2xl overflow-hidden border border-slate-200 bg-slate-50 p-3">
+            <img
+              src="collision-warning-system-Arduino.jpg"
+              alt="Arduino Traffic Light & Collision Warning System Circuit Diagram"
+              class="w-full h-auto rounded-xl object-contain mx-auto"
+              onerror="this.style.display='none'; document.getElementById('schematic-fallback').classList.remove('hidden');"
+            />
+            <!-- Fallback Schematic SVG if local JPG is missing -->
+            <div id="schematic-fallback" class="hidden p-6 text-center bg-slate-900 text-slate-200 rounded-xl space-y-3">
+              <div class="text-xs font-mono text-amber-400 uppercase">Schematic Diagram Preview (Upload <code>collision-warning-system-Arduino.jpg</code> to repo root)</div>
+              <svg viewBox="0 0 560 220" class="w-full max-w-lg mx-auto" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect x="20" y="30" width="170" height="160" rx="12" fill="#1e293b" stroke="#3b82f6" stroke-width="2"/>
+                <text x="105" y="60" fill="#93c5fd" font-family="monospace" font-size="14" font-weight="bold" text-anchor="middle">ARDUINO UNO R3</text>
+                <text x="40" y="90" fill="#e2e8f0" font-family="monospace" font-size="11">D2  ──► Green LED</text>
+                <text x="40" y="110" fill="#e2e8f0" font-family="monospace" font-size="11">D3  ──► Yellow LED</text>
+                <text x="40" y="130" fill="#e2e8f0" font-family="monospace" font-size="11">D4  ──► Red LED</text>
+                <text x="40" y="152" fill="#e2e8f0" font-family="monospace" font-size="11">D9/D10 ► HC-SR04</text>
+                <text x="40" y="172" fill="#e2e8f0" font-family="monospace" font-size="11">D11 ──► Piezo Buzzer</text>
+
+                <line x1="190" y1="86" x2="290" y2="55" stroke="#10b981" stroke-width="2"/>
+                <line x1="190" y1="106" x2="290" y2="95" stroke="#f59e0b" stroke-width="2"/>
+                <line x1="190" y1="126" x2="290" y2="135" stroke="#ef4444" stroke-width="2"/>
+                <line x1="190" y1="150" x2="290" y2="175" stroke="#38bdf8" stroke-width="2"/>
+
+                <rect x="290" y="35" width="245" height="150" rx="12" fill="#0f172a" stroke="#475569" stroke-width="2"/>
+                <circle cx="325" cy="58" r="9" fill="#10b981"/>
+                <text x="345" y="62" fill="#cbd5e1" font-family="monospace" font-size="11">Green LED + 220Ω → GND</text>
+                <circle cx="325" cy="95" r="9" fill="#f59e0b"/>
+                <text x="345" y="99" fill="#cbd5e1" font-family="monospace" font-size="11">Yellow LED + 220Ω → GND</text>
+                <circle cx="325" cy="132" r="9" fill="#ef4444"/>
+                <text x="345" y="136" fill="#cbd5e1" font-family="monospace" font-size="11">Red LED + 220Ω → GND</text>
+                <text x="315" y="170" fill="#38bdf8" font-family="monospace" font-size="11">HC-SR04 (5V/GND) &amp; Buzzer</text>
+              </svg>
+            </div>
+          </div>
+
+          <!-- Pinout Mapping Table -->
+          <div class="lg:col-span-5 overflow-hidden rounded-2xl border border-slate-200">
+            <table class="w-full text-left text-xs sm:text-sm">
+              <thead class="bg-slate-900 text-white font-mono">
+                <tr>
+                  <th class="py-2.5 px-3">Component</th>
+                  <th class="py-2.5 px-3">Arduino Pin</th>
+                  <th class="py-2.5 px-3">Notes</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-200 bg-white">
+                <tr>
+                  <td class="py-2.5 px-3 font-semibold text-emerald-700">Green LED</td>
+                  <td class="py-2.5 px-3 font-mono font-bold">D2</td>
+                  <td class="py-2.5 px-3 text-slate-600">220 &Omega; resistor to GND</td>
+                </tr>
+                <tr>
+                  <td class="py-2.5 px-3 font-semibold text-amber-700">Yellow LED</td>
+                  <td class="py-2.5 px-3 font-mono font-bold">D3</td>
+                  <td class="py-2.5 px-3 text-slate-600">220 &Omega; resistor to GND</td>
+                </tr>
+                <tr>
+                  <td class="py-2.5 px-3 font-semibold text-red-700">Red LED</td>
+                  <td class="py-2.5 px-3 font-mono font-bold">D4</td>
+                  <td class="py-2.5 px-3 text-slate-600">220 &Omega; resistor to GND</td>
+                </tr>
+                <tr>
+                  <td class="py-2.5 px-3 font-semibold text-slate-900">HC-SR04 Trig</td>
+                  <td class="py-2.5 px-3 font-mono font-bold">D9</td>
+                  <td class="py-2.5 px-3 text-slate-600">10 &mu;s trigger pulse</td>
+                </tr>
+                <tr>
+                  <td class="py-2.5 px-3 font-semibold text-slate-900">HC-SR04 Echo</td>
+                  <td class="py-2.5 px-3 font-mono font-bold">D10</td>
+                  <td class="py-2.5 px-3 text-slate-600">Echo pulse duration</td>
+                </tr>
+                <tr>
+                  <td class="py-2.5 px-3 font-semibold text-blue-700">Passive Buzzer</td>
+                  <td class="py-2.5 px-3 font-mono font-bold">D11 (PWM)</td>
+                  <td class="py-2.5 px-3 text-slate-600">300 Hz / 500 Hz tones</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- SECTION 6: ENVIRONMENTAL IMPACT ASSESSMENT -->
+      <section id="environment" class="bg-white rounded-2xl p-6 sm:p-8 shadow-sm border border-slate-200 space-y-6">
+        <div class="border-b border-slate-100 pb-4">
+          <h2 class="text-2xl font-bold text-slate-900">6. Environmental Impact Assessment</h2>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div class="p-4 rounded-xl bg-emerald-50/70 border border-emerald-200/80 space-y-1.5">
+            <div class="text-emerald-700 font-bold text-sm">♻️ RoHS &amp; WEEE Materials</div>
+            <p class="text-xs text-slate-700 leading-relaxed">
+              The Arduino Uno Rev3 and passive components are RoHS and WEEE compliant, restricting lead, mercury, and hazardous heavy metals.
+            </p>
+          </div>
+          <div class="p-4 rounded-xl bg-blue-50/70 border border-blue-200/80 space-y-1.5">
+            <div class="text-blue-700 font-bold text-sm">⚡ Low Energy Footprint</div>
+            <p class="text-xs text-slate-700 leading-relaxed">
+              The complete circuit draws minimal current (~50 mA at 5V = 0.25 W), making it ideal for USB power or off-grid solar cells.
+            </p>
+          </div>
+          <div class="p-4 rounded-xl bg-amber-50/70 border border-amber-200/80 space-y-1.5">
+            <div class="text-amber-700 font-bold text-sm">🔧 Modular Reusability</div>
+            <p class="text-xs text-slate-700 leading-relaxed">
+              Assembled on a solderless breadboard with Dupont jumpers, 100% of components can be disassembled and reused in future labs without e-waste.
+            </p>
+          </div>
+          <div class="p-4 rounded-xl bg-purple-50/70 border border-purple-200/80 space-y-1.5">
+            <div class="text-purple-700 font-bold text-sm">📦 Consolidated Shipping</div>
+            <p class="text-xs text-slate-700 leading-relaxed">
+              Sourcing components in consolidated batches from electronics distributors reduces packaging waste and delivery carbon emissions.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <!-- SECTION 7: BILL OF MATERIALS (BoM) -->
+      <section id="bom" class="bg-white rounded-2xl p-6 sm:p-8 shadow-sm border border-slate-200 space-y-6">
+        <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-4">
+          <h2 class="text-2xl font-bold text-slate-900">7. Bill of Materials (BoM)</h2>
+          <span class="text-xs font-mono px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 font-bold">Total Cost: $41.64</span>
+        </div>
+
+        <div class="overflow-x-auto rounded-xl border border-slate-200">
+          <table class="w-full text-left text-sm">
+            <thead class="bg-slate-900 text-white font-mono text-xs uppercase">
+              <tr>
+                <th class="py-3 px-4">Item</th>
+                <th class="py-3 px-4">Qty</th>
+                <th class="py-3 px-4">Unit Price</th>
+                <th class="py-3 px-4">Subtotal</th>
+                <th class="py-3 px-4">Supplier / Source</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-200">
+              <tr class="hover:bg-slate-50">
+                <td class="py-3 px-4 font-semibold">Arduino Uno Rev3</td>
+                <td class="py-3 px-4 font-mono">1</td>
+                <td class="py-3 px-4 font-mono">$27.60</td>
+                <td class="py-3 px-4 font-mono font-semibold">$27.60</td>
+                <td class="py-3 px-4"><a href="https://store-usa.arduino.cc/products/arduino-uno-rev3" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:underline font-medium">Arduino Store</a></td>
+              </tr>
+              <tr class="hover:bg-slate-50">
+                <td class="py-3 px-4 font-semibold">HC-SR04 Ultrasonic Sensor</td>
+                <td class="py-3 px-4 font-mono">1</td>
+                <td class="py-3 px-4 font-mono">$3.95</td>
+                <td class="py-3 px-4 font-mono font-semibold">$3.95</td>
+                <td class="py-3 px-4"><a href="https://www.adafruit.com/product/3942" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:underline font-medium">Adafruit</a></td>
+              </tr>
+              <tr class="hover:bg-slate-50">
+                <td class="py-3 px-4 font-semibold">Passive Buzzer</td>
+                <td class="py-3 px-4 font-mono">1</td>
+                <td class="py-3 px-4 font-mono">$0.95</td>
+                <td class="py-3 px-4 font-mono font-semibold">$0.95</td>
+                <td class="py-3 px-4"><a href="https://www.sparkfun.com/passive-buzzer-module.html" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:underline font-medium">SparkFun</a></td>
+              </tr>
+              <tr class="hover:bg-slate-50">
+                <td class="py-3 px-4 font-semibold">LEDs (Red, Yellow, Green)</td>
+                <td class="py-3 px-4 font-mono">3</td>
+                <td class="py-3 px-4 font-mono">$0.20</td>
+                <td class="py-3 px-4 font-mono font-semibold">$0.60</td>
+                <td class="py-3 px-4 text-slate-600">Adafruit</td>
+              </tr>
+              <tr class="hover:bg-slate-50">
+                <td class="py-3 px-4 font-semibold">220 &Omega; Resistors</td>
+                <td class="py-3 px-4 font-mono">3</td>
+                <td class="py-3 px-4 font-mono">$0.03</td>
+                <td class="py-3 px-4 font-mono font-semibold">$0.09</td>
+                <td class="py-3 px-4 text-slate-600">Adafruit</td>
+              </tr>
+              <tr class="hover:bg-slate-50">
+                <td class="py-3 px-4 font-semibold">Breadboard</td>
+                <td class="py-3 px-4 font-mono">1</td>
+                <td class="py-3 px-4 font-mono">$4.95</td>
+                <td class="py-3 px-4 font-mono font-semibold">$4.95</td>
+                <td class="py-3 px-4"><a href="https://www.adafruit.com/product/64" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:underline font-medium">Adafruit</a></td>
+              </tr>
+              <tr class="hover:bg-slate-50">
+                <td class="py-3 px-4 font-semibold">Jumper Wires (M-M / M-F)</td>
+                <td class="py-3 px-4 font-mono">1 set</td>
+                <td class="py-3 px-4 font-mono">$3.50</td>
+                <td class="py-3 px-4 font-mono font-semibold">$3.50</td>
+                <td class="py-3 px-4"><a href="https://www.sparkfun.com/jumper-wires-standard-7-m-m-30-awg-30-pack.html" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:underline font-medium">SparkFun</a></td>
+              </tr>
+            </tbody>
+            <tfoot class="bg-slate-100 font-bold text-slate-900">
+              <tr>
+                <td colspan="3" class="py-3 px-4 text-right">Estimated Total</td>
+                <td class="py-3 px-4 font-mono text-emerald-700">$41.64</td>
+                <td class="py-3 px-4 text-slate-500">—</td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      </section>
+
+      <!-- SECTION 8: PROTOTYPE -->
+      <section id="prototype" class="bg-white rounded-2xl p-6 sm:p-8 shadow-sm border border-slate-200 space-y-4">
+        <div class="border-b border-slate-100 pb-4">
+          <h2 class="text-2xl font-bold text-slate-900">8. Physical Breadboard Prototype</h2>
+        </div>
+        <p class="text-slate-700 text-sm sm:text-base">
+          The photograph below shows the assembled Traffic Light Warning System prototype wired on a solderless breadboard and connected to the Arduino Uno Rev3 microcontroller.
+        </p>
+        <div class="rounded-2xl overflow-hidden border border-slate-200 bg-slate-50 p-3">
+          <img
+            id="prototypeImage"
+            src="prototype.jpg"
+            alt="Traffic light and collision warning system breadboard prototype"
+            class="w-full max-h-[460px] object-contain rounded-xl mx-auto"
+            onerror="this.onerror=null; this.src='https://placehold.co/900x450/0f172a/38bdf8?text=Upload+prototype.jpg+to+Your+GitHub+Repo+Root';"
+          />
+        </div>
+      </section>
+
+      <!-- SECTION 9: ARDUINO C++ CODE -->
+      <section id="code" class="bg-white rounded-2xl p-6 sm:p-8 shadow-sm border border-slate-200 space-y-4">
+        <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-4">
+          <div>
+            <h2 class="text-2xl font-bold text-slate-900">9. Arduino C++ Firmware Code</h2>
+            <p class="text-xs text-slate-500 mt-0.5">Controls LED signal indicators and passive buzzer frequencies based on HC-SR04 distance thresholds.</p>
+          </div>
+          <button id="copy-code-btn" type="button" onclick="copyCode()" class="copy-btn inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-slate-900 hover:bg-blue-600 text-white text-xs font-mono font-semibold transition-colors cursor-pointer">
+            <span>📋</span>
+            <span id="copy-btn-text">Copy Code</span>
+          </button>
+        </div>
+
+        <div class="code-container rounded-xl overflow-hidden shadow-inner">
+          <pre class="line-numbers"><code id="arduinoCode" class="language-cpp">// Traffic Light &amp; Collision Warning System with Distance Sensor (HC-SR04)
+// Course: TECH 117 — Group 06 (Xuan, Tyler, Michael, Jide)
+// Object is farther than 30cm: Green LED lights up
+// Object is closer than 30cm, but more than 10cm away: Yellow LED lights, buzzer plays 300Hz tone
+// Object is closer than 10cm: Red LED lights up, buzzer plays 500Hz tone
+
+// LED pins
+const int greenLED = 2;
+const int yellowLED = 3;
+const int redLED = 4;
+
+// Ultrasonic sensor pins
+const int trigPin = 9;
+const int echoPin = 10;
+
+// Passive buzzer pin
+const int buzzer = 11;
+
+void setup() {
+  pinMode(greenLED, OUTPUT);
+  pinMode(yellowLED, OUTPUT);
+  pinMode(redLED, OUTPUT);
+  pinMode(trigPin, OUTPUT);
+  pinMode(echoPin, INPUT);
+  Serial.begin(9600);
+}
+
+void loop() {
+  // Measure distance
+  digitalWrite(trigPin, LOW);
+  delayMicroseconds(2);
+  digitalWrite(trigPin, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(trigPin, LOW);
+
+  long duration = pulseIn(echoPin, HIGH);
+  long distance = duration * 0.034 / 2;
+
+  Serial.print("Distance: ");
+  Serial.print(distance);
+  Serial.println(" cm");
+  
+  // Error in measurement:
+  if (distance &lt;= 0)
+    return;
+
+  // Too close (Red Light Warning):
+  if (distance &lt;= 10) {
+    digitalWrite(greenLED, LOW);
+    digitalWrite(yellowLED, LOW);
+    digitalWrite(redLED, HIGH);
+    tone(buzzer, 500); // Play 500Hz tone
+    return;
+  }
+
+  // Midrange (Yellow Caution Warning):
+  if (distance &lt;= 30) {
+    digitalWrite(greenLED, LOW);
+    digitalWrite(yellowLED, HIGH);
+    digitalWrite(redLED, LOW);
+    tone(buzzer, 300); // Play 300Hz tone
+    return;
+  }
+
+  // Normal status (Green Clear):
+  digitalWrite(greenLED, HIGH);
+  digitalWrite(yellowLED, LOW);
+  digitalWrite(redLED, LOW);
+  noTone(buzzer); // stop buzzer
+
+  delay(100);
+}</code></pre>
+        </div>
+      </section>
+
+      <!-- SECTION 10: CONCLUSION -->
+      <section id="conclusion" class="bg-white rounded-2xl p-6 sm:p-8 shadow-sm border border-slate-200 space-y-3">
+        <div class="border-b border-slate-100 pb-4">
+          <h2 class="text-2xl font-bold text-slate-900">10. Conclusion</h2>
+        </div>
+        <p class="text-slate-700 leading-relaxed">
+          The <strong>Traffic Light Warning System</strong> effectively demonstrates real-time proximity and signal state alerting using an Arduino Uno, ultrasonic distance sensing, and multi-frequency auditory feedback. At a total component cost of <strong>$41.64</strong>, the system provides an affordable, educational, and environmentally sustainable prototype capable of helping drivers anticipate stop-line hazards and avoid intersection collisions.
+        </p>
+      </section>
+
+      <!-- SECTION 11: REFERENCES -->
+      <section id="references" class="bg-white rounded-2xl p-6 sm:p-8 shadow-sm border border-slate-200 space-y-4">
+        <div class="border-b border-slate-100 pb-4">
+          <h2 class="text-2xl font-bold text-slate-900">11. Research &amp; Technical References</h2>
+        </div>
+
+        <ul class="space-y-3 text-sm text-slate-700 list-disc pl-5">
+          <li>
+            U.S. Department of Transportation (USDOT). (n.d.). <em>Connected vehicle applications: Red light violation warning (V2I).</em> Intelligent Transportation Systems Joint Program Office.
+            <a href="https://www.its.dot.gov/cv_basics/cv_basics_what.htm" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:underline break-all">https://www.its.dot.gov/cv_basics/cv_basics_what.htm</a>
+          </li>
+          <li>
+            Audi MediaCenter. (2019). <em>Audi Traffic Light Information (TLI) system: Vehicle-to-infrastructure deployment for urban intersections.</em>
+            <a href="https://media.audiusa.com/releases/324" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:underline break-all">https://media.audiusa.com/releases/324</a>
+          </li>
+          <li>
+            National Highway Traffic Safety Administration (NHTSA). (n.d.). <em>Intersection safety and red-light running prevention research.</em> U.S. Department of Transportation.
+            <a href="https://www.nhtsa.gov/road-safety/intersection-safety" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:underline break-all">https://www.nhtsa.gov/road-safety/intersection-safety</a>
+          </li>
+          <li>
+            IEEE Xplore. (2019). <em>Real-time traffic light recognition and low-latency alert algorithms for advanced driver assistance systems.</em>
+            <a href="https://ieeexplore.ieee.org/document/8917165" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:underline break-all">https://ieeexplore.ieee.org/document/8917165</a>
+          </li>
+          <li>
+            Arduino Project Hub. (n.d.). <em>Ultrasonic sensor, buzzer, and LED interface projects.</em> Arduino.
+            <a href="https://projecthub.arduino.cc/projects/tags/ultrasonic-sensor" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:underline break-all">https://projecthub.arduino.cc/projects/tags/ultrasonic-sensor</a>
+          </li>
+          <li>
+            Last Minute Engineers. (n.d.). <em>How HC-SR04 ultrasonic sensor works &amp; how to interface it with Arduino.</em>
+            <a href="https://lastminuteengineers.com/ultrasonic-sensor-arduino-tutorial/" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:underline break-all">https://lastminuteengineers.com/ultrasonic-sensor-arduino-tutorial/</a>
+          </li>
+        </ul>
+      </section>
+
+      <!-- FOOTER -->
+      <footer class="text-center text-xs text-slate-500 py-6 border-t border-slate-200">
+        <p class="font-semibold text-slate-700">TECH 117 Project — Group 06 | Team Members: Xuan, Tyler, Michael, Jide</p>
+        <p class="mt-1">Traffic Light Warning System • Built for GitHub Pages Deployment</p>
+      </footer>
+
+    </main>
+  </div>
+
+  <!-- Interactive JavaScript -->
+  <script>
+    // 1. Mobile Navigation Drawer Toggle
+    const mobileMenuBtn = document.getElementById('mobile-menu-toggle');
+    const mobileDrawer = document.getElementById('mobile-drawer');
+    if (mobileMenuBtn && mobileDrawer) {
+      mobileMenuBtn.addEventListener('click', () => {
+        mobileDrawer.classList.toggle('hidden');
+      });
+      document.querySelectorAll('.mobile-nav-link').forEach(link => {
+        link.addEventListener('click', () => mobileDrawer.classList.add('hidden'));
+      });
+    }
+
+    // 2. Web Audio API Piezo Buzzer Simulator (300Hz Yellow / 500Hz Red)
+    let buzzerAudioEnabled = false;
+    let audioCtx = null;
+    const audioToggleBtn = document.getElementById('audio-toggle-btn');
+
+    function playPiezoTone(freqHz) {
+      if (!buzzerAudioEnabled || freqHz <= 0) return;
+      try {
+        if (!audioCtx) {
+          audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        }
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'square';
+        osc.frequency.setValueAtTime(freqHz, audioCtx.currentTime);
+        gain.gain.setValueAtTime(0.035, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.18);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.18);
+      } catch (e) {
+        // Ignore browser autoplay restrictions if triggered without gesture
+      }
+    }
+
+    audioToggleBtn.addEventListener('click', () => {
+      buzzerAudioEnabled = !buzzerAudioEnabled;
+      audioToggleBtn.textContent = buzzerAudioEnabled
+        ? '🔊 Buzzer Audio: ON (Piezo Active)'
+        : '🔇 Buzzer Audio: OFF (Click to Enable)';
+      audioToggleBtn.classList.toggle('text-emerald-400', buzzerAudioEnabled);
+      audioToggleBtn.classList.toggle('text-amber-400', !buzzerAudioEnabled);
+      if (buzzerAudioEnabled) playPiezoTone(440);
+    });
+
+    // 3. Traffic Light & Ultrasonic Distance Simulator Logic
+    const distanceSlider = document.getElementById('distance-slider');
+    const distanceReadout = document.getElementById('distance-readout');
+    const lightRed = document.getElementById('light-red');
+    const lightYellow = document.getElementById('light-yellow');
+    const lightGreen = document.getElementById('light-green');
+    const alertBanner = document.getElementById('alert-banner');
+    const buzzerBadge = document.getElementById('buzzer-badge');
+    const serialOutput = document.getElementById('serial-output');
+
+    function updateSimulatorByDistance(cm) {
+      distanceSlider.value = cm;
+      distanceReadout.textContent = `${cm} cm`;
+
+      lightRed.classList.remove('active');
+      lightYellow.classList.remove('active');
+      lightGreen.classList.remove('active');
+
+      let stateName = 'GREEN';
+      let hz = 0;
+
+      if (cm <= 10) {
+        // Red Light Threshold (<= 10 cm)
+        lightRed.classList.add('active');
+        alertBanner.className = 'p-4 rounded-xl bg-red-500/20 border border-red-500/50 text-red-300 font-bold text-sm sm:text-base transition-all';
+        alertBanner.textContent = `🚨 DANGER: RED LIGHT / STOP LINE (${cm} cm) — Brake immediately! (500 Hz Tone)`;
+        buzzerBadge.textContent = 'Buzzer (D11): ACTIVE — 500 Hz';
+        buzzerBadge.className = 'mt-4 text-xs font-mono px-3 py-1 rounded-full bg-red-500/20 text-red-300 border border-red-500/40 font-bold';
+        stateName = 'RED';
+        hz = 500;
+      } else if (cm <= 30) {
+        // Yellow Light Threshold (11 - 30 cm)
+        lightYellow.classList.add('active');
+        alertBanner.className = 'p-4 rounded-xl bg-amber-500/20 border border-amber-500/50 text-amber-300 font-bold text-sm sm:text-base transition-all';
+        alertBanner.textContent = `⚠️ CAUTION: YELLOW LIGHT APPROACHING (${cm} cm) — Prepare to stop! (300 Hz Tone)`;
+        buzzerBadge.textContent = 'Buzzer (D11): ACTIVE — 300 Hz';
+        buzzerBadge.className = 'mt-4 text-xs font-mono px-3 py-1 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40 font-bold';
+        stateName = 'YELLOW';
+        hz = 300;
+      } else {
+        // Green Light Threshold (> 30 cm)
+        lightGreen.classList.add('active');
+        alertBanner.className = 'p-4 rounded-xl bg-emerald-500/15 border border-emerald-500/40 text-emerald-300 font-semibold text-sm sm:text-base transition-all';
+        alertBanner.textContent = `✅ STATUS: GREEN LIGHT (${cm} cm) — Clear path. Proceed with normal caution.`;
+        buzzerBadge.textContent = 'Buzzer (D11): SILENT (0 Hz)';
+        buzzerBadge.className = 'mt-4 text-xs font-mono px-3 py-1 rounded-full bg-slate-800 text-slate-300 border border-slate-700';
+        stateName = 'GREEN';
+        hz = 0;
+      }
+
+      playPiezoTone(hz);
+
+      // Append Serial Monitor Line
+      const line = document.createElement('div');
+      line.textContent = `Distance: ${cm} cm | State: ${stateName} | Buzzer: ${hz > 0 ? hz + ' Hz' : 'OFF'}`;
+      serialOutput.appendChild(line);
+      if (serialOutput.children.length > 15) {
+        serialOutput.removeChild(serialOutput.firstChild);
+      }
+      serialOutput.scrollTop = serialOutput.scrollHeight;
+    }
+
+    distanceSlider.addEventListener('input', (e) => {
+      updateSimulatorByDistance(parseInt(e.target.value, 10));
+    });
+
+    // Global function for manual override buttons
+    window.setSignal = function(color) {
+      if (color === 'green') updateSimulatorByDistance(65);
+      else if (color === 'yellow') updateSimulatorByDistance(20);
+      else if (color === 'red') updateSimulatorByDistance(8);
+    };
+
+    // 4. Copy Arduino Code with Fallback & Toast Feedback (No alert())
+    window.copyCode = function() {
+      const codeEl = document.getElementById('arduinoCode');
+      const codeText = codeEl ? codeEl.innerText : '';
+      const textarea = document.createElement('textarea');
+      textarea.value = codeText;
+      textarea.style.position = 'fixed';
+      textarea.style.opacity = '0';
+      document.body.appendChild(textarea);
+      textarea.select();
+      try {
+        document.execCommand('copy');
+        const btnText = document.getElementById('copy-btn-text');
+        const toast = document.getElementById('toast-box');
+        if (btnText) btnText.textContent = 'Copied!';
+        if (toast) toast.style.opacity = '1';
+        setTimeout(() => {
+          if (btnText) btnText.textContent = 'Copy Code';
+          if (toast) toast.style.opacity = '0';
+        }, 2200);
+      } catch (err) {
+        // Fallback if copy blocked
+      }
+      document.body.removeChild(textarea);
+    };
+  </script>
+</body>
+
+</html>
