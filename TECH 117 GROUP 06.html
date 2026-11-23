@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Traffic Light Warning System | TECH117 Project</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <!-- Navigation Bar -->
+    <nav class="navbar">
+        <div class="container nav-content">
+            <span class="logo">🚦 SmartTraffic Alert</span>
+            <ul class="nav-links">
+                <li><a href="#introduction">Introduction</a></li>
+                <li><a href="#demo">System Demo</a></li>
+                <li><a href="#references">Research &amp; References</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Hero Header -->
+    <header class="hero">
+        <div class="container">
+            <span class="badge">TECH117 — Group [06] Project</span>
+            <h1>Traffic Light Warning System</h1>
+            <p class="subtitle">An intelligent real-time driver alert system designed to prevent red-light running, reduce intersection collisions, and improve road safety in low-visibility conditions.</p>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container">
+
+        <!-- SECTION 1: INTRODUCTION -->
+        <section id="introduction" class="card-section">
+            <h2>1. Introduction</h2>
+            <p class="section-overview">
+                Intersections are among the most high-risk areas on modern roadways due to sudden signal transitions, driver distraction, and adverse weather conditions such as fog or heavy rain. Our <strong>Traffic Light Warning System</strong> addresses this safety gap by detecting upcoming traffic signal states and delivering timely visual and auditory warnings inside the vehicle, giving drivers sufficient reaction time to decelerate safely.
+            </p>
+
+            <div class="grid-2">
+                <!-- PART A: PROJECT GOALS & SUCCESS CRITERIA -->
+                <div class="info-box goal-box">
+                    <h3>🎯 Project Goals &amp; Success Criteria</h3>
+                    
+                    <p><strong>1. Project Goals (What the project is intended to do):</strong></p>
+                    <ul>
+                        <li><strong>Real-Time Signal Detection:</strong> Accurately identify traffic light states (Green, Yellow, Red) prior to the vehicle reaching the intersection stop line.</li>
+                        <li><strong>Timely Driver Alerts:</strong> Deliver clear visual dashboard indicators and audio chimes to warn drivers of an impending Yellow or Red light.</li>
+                        <li><strong>Safety Enhancement:</strong> Reduce late braking and unintentional red-light violations during distracted driving or poor visibility.</li>
+                    </ul>
+
+                    <p><strong>2. Success Criteria (How success will be measured):</strong></p>
+                    <ul>
+                        <li><strong>Detection Accuracy:</strong> The prototype correctly classifies Green, Yellow, and Red signals with <strong>at least 95% accuracy</strong> across 50 test runs.</li>
+                        <li><strong>Alert Latency:</strong> System response time from signal change to driver warning display is <strong>less than 0.5 seconds</strong>.</li>
+                        <li><strong>User Comprehension:</strong> At least <strong>85% of test participants</strong> correctly interpret the warning level without confusion during usability testing.</li>
+                    </ul>
+                </div>
+
+                <!-- PART B: CONSTRAINTS & RISKS -->
+                <div class="info-box risk-box">
+                    <h3>⚠️ Constraints &amp; Risks</h3>
+                    
+                    <p><strong>1. Project Constraints (Limitations):</strong></p>
+                    <ul>
+                        <li><strong>Time:</strong> The one-semester timeline limits testing to controlled scale models or simulated environments rather than live public roads.</li>
+                        <li><strong>Budget:</strong> A strict student project budget prevents purchasing expensive commercial V2X (Vehicle-to-Everything) transceivers.</li>
+                        <li><strong>Resources &amp; Skills:</strong> Limited access to outdoor testing tracks and varying levels of embedded programming experience within the team.</li>
+                    </ul>
+
+                    <p><strong>2. Risks &amp; Backup Plans:</strong></p>
+                    <ul>
+                        <li>
+                            <strong>Risk 1 — Lighting &amp; Glare Interference:</strong> Ambient sunlight or reflections may cause false color readings.<br>
+                            <em>Backup Plan:</em> Apply HSV color-space filtering in software and conduct primary demonstrations under controlled indoor lighting.
+                        </li>
+                        <li>
+                            <strong>Risk 2 — Hardware Failure or Shipping Delays:</strong> Microcontroller or sensor components may arrive late or malfunction.<br>
+                            <em>Backup Plan:</em> Maintain a fully interactive web-based software simulation (shown below) to demonstrate system logic and alert timing on schedule.
+                        </li>
+                        <li>
+                            <strong>Risk 3 — Scope Creep:</strong> Adding too many features (e.g., pedestrian tracking) may delay core deliverables.<br>
+                            <em>Backup Plan:</em> Prioritize core signal-warning functionality first and treat extra features as optional stretch goals.
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 2: INTERACTIVE SYSTEM DEMO -->
+        <section id="demo" class="card-section">
+            <h2>2. Interactive Alert Prototype</h2>
+            <p>Click the buttons below to test how the in-vehicle display reacts to changing traffic light signals:</p>
+            
+            <div class="demo-container">
+                <div class="traffic-light">
+                    <div id="light-red" class="bulb red"></div>
+                    <div id="light-yellow" class="bulb yellow"></div>
+                    <div id="light-green" class="bulb green active"></div>
+                </div>
+
+                <div class="dashboard-screen">
+                    <h4>In-Vehicle Driver Warning Display</h4>
+                    <div id="alert-banner" class="alert-status safe">
+                        STATUS: GREEN LIGHT — Proceed with normal caution.
+                    </div>
+                    <div class="controls">
+                        <button onclick="setSignal('green')" class="btn btn-green">Simulate Green</button>
+                        <button onclick="setSignal('yellow')" class="btn btn-yellow">Simulate Yellow</button>
+                        <button onclick="setSignal('red')" class="btn btn-red">Simulate Red</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 3: RESEARCH & REFERENCES -->
+        <section id="references" class="card-section">
+            <h2>3. Research &amp; References</h2>
+            <p>The following research articles, safety reports, and real-world implementations support the technical design and necessity of our Traffic Light Warning System:</p>
+            
+            <ul class="reference-list">
+                <li>
+                    <strong>U.S. Department of Transportation (USDOT) – Connected Vehicle Applications (Red Light Violation Warning):</strong><br>
+                    Explains how Vehicle-to-Infrastructure (V2I) communication warns drivers when they are predicted to enter a signalized intersection against a red light.<br>
+                    <a href="https://www.its.dot.gov/cv_basics/cv_basics_what.htm" target="_blank" rel="noopener noreferrer">https://www.its.dot.gov/cv_basics/cv_basics_what.htm</a>
+                </li>
+                <li>
+                    <strong>Audi Traffic Light Information (TLI) System – Industry Inspiration:</strong><br>
+                    A real-world commercial deployment demonstrating how in-dash traffic signal alerts and speed advisories improve traffic flow and reduce sudden braking.<br>
+                    <a href="https://media.audiusa.com/releases/324" target="_blank" rel="noopener noreferrer">https://media.audiusa.com/releases/324</a>
+                </li>
+                <li>
+                    <strong>National Highway Traffic Safety Administration (NHTSA) – Intersection Safety Research:</strong><br>
+                    Provides statistical evidence on red-light running fatalities and how early driver warning systems reduce collision severity.<br>
+                    <a href="https://www.nhtsa.gov/road-safety/intersection-safety" target="_blank" rel="noopener noreferrer">https://www.nhtsa.gov/road-safety/intersection-safety</a>
+                </li>
+                <li>
+                    <strong>IEEE Xplore – Real-Time Traffic Light Recognition for Driver Assistance Systems:</strong><br>
+                    Technical study detailing color segmentation, bounding-box detection, and low-latency alert algorithms used in modern driver-assistance prototypes.<br>
+                    <a href="https://ieeexplore.ieee.org/document/8917165" target="_blank" rel="noopener noreferrer">https://ieeexplore.ieee.org/document/8917165</a>
+                </li>
+            </ul>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <p>TECH117 Project — Group [06] | Team Members: [Xuan, Tyler, Michael, Jide]</p>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>
